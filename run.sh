@@ -58,12 +58,9 @@ cache_dir_for() {
   fi
 }
 
-# Extension handlers
-hs() { runghc "$@"; }
-py() { python "$@"; }
-
-build_scala() {
+cache_build() {
   FILE_NAME=$1
+  BUILDER_ARGS=( "${@:2}" )
 
   if TARGET_DIR=$(cache_dir_for "$FILE_NAME"); then
     cd "$TARGET_DIR"
@@ -73,16 +70,21 @@ build_scala() {
     local OLD_DIR=$(pwd)
 
     cd "$TARGET_DIR"
-    if ! scalac "$FILE_NAME"; then
+    if ! "${BUILDER_ARGS[@]}" "$FILE_NAME"; then
       cd "$OLD_DIR"
       rm -rf "$TARGET_DIR"
     fi
   fi
 }
 
+# Extension handlers
+hs() { runghc "$@"; }
+py() { python "$@"; }
+
 _scala() {
   FILE_NAME=$1
-  build_scala "$FILE_NAME" && scala main "${@:2}"
+
+  cache_build "$FILE_NAME" scalac && scala main "${@:2}"
 }
 
 main "$@"
