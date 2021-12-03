@@ -87,5 +87,12 @@ _scala() {
   cache_build "$FILE_NAME" scalac && scala main "${@:2}"
 }
 
+rs() {
+  FILE_NAME=$1
+  FILE_STEM=${FILE_NAME%.rs}
+
+  cache_build "$FILE_NAME" rustc -o "$FILE_STEM" && "./$FILE_STEM" "${@:2}"
+}
+
 main "$@"
 
