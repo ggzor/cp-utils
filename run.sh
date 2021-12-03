@@ -35,6 +35,7 @@ main() {
 
 # Extension handlers
 hs() { runghc "$@"; }
+py() { python "$@"; }
 
 main "$@"
 
