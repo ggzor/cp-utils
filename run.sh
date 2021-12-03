@@ -69,15 +69,20 @@ build_scala() {
     cd "$TARGET_DIR"
   else
     cp "$FILE_NAME" "$TARGET_DIR"
+
+    local OLD_DIR=$(pwd)
+
     cd "$TARGET_DIR"
-    scalac "$FILE_NAME"
+    if ! scalac "$FILE_NAME"; then
+      cd "$OLD_DIR"
+      rm -rf "$TARGET_DIR"
+    fi
   fi
 }
 
 _scala() {
   FILE_NAME=$1
-  build_scala "$FILE_NAME"
-  scala main "${@:2}";
+  build_scala "$FILE_NAME" && scala main "${@:2}"
 }
 
 main "$@"
