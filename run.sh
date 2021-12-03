@@ -23,19 +23,28 @@ main() {
   FILE_NAME=$(basename "$FILE_PATH")
   FILE_EXTENSION=${FILE_NAME##*.}
 
-  if ! declare -F "$FILE_EXTENSION" &> /dev/null; then
-    exit_error "No handler registered for extension: $FILE_EXTENSION"
+  ALTERNATIVE_RUNNER="_$FILE_EXTENSION"
+
+  if declare -F "$ALTERNATIVE_RUNNER" &> /dev/null; then
+    RUNNER=$ALTERNATIVE_RUNNER
+  else
+    if declare -F "$FILE_EXTENSION" &> /dev/null; then
+      RUNNER=$FILE_EXTENSION
+    else
+      exit_error "No handler registered for extension: $FILE_EXTENSION"
+    fi
   fi
 
   (
     cd "$FILE_DIR"
-    "$FILE_EXTENSION" "$FILE_NAME" "${@:2}"
+    "$RUNNER" "$FILE_NAME" "${@:2}"
   )
 }
 
 # Extension handlers
 hs() { runghc "$@"; }
 py() { python "$@"; }
+_scala() { scala "$@"; }
 
 main "$@"
 
