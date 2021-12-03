@@ -9,7 +9,10 @@ solve1 = L.foldl' (+) 0
 solve2 :: [Int] -> Int
 solve2 = L.foldl' (*) 1
 
-solutions = [solve1, solve2]
+solutions =
+  [ solve1
+  , solve2
+  ]
 
 main :: IO ()
 main = do
