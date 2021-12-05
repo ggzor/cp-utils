@@ -1,6 +1,14 @@
+{-# LANGUAGE TupleSections #-}
 {-# LANGUAGE TypeApplications #-}
 
+import Data.Bifunctor (first, second)
+import Data.Char as C
+import Data.Function
 import qualified Data.List as L
+import qualified Data.Map.Strict as M
+import Data.Maybe
+import Data.Ord
+
 import System.Environment
 
 solve1 :: [Int] -> Int
@@ -13,6 +21,11 @@ solutions =
   [ solve1
   , solve2
   ]
+
+numbers =
+  map (read @Int)
+    . filter (C.isNumber . head)
+    . L.groupBy ((==) `on` C.isNumber)
 
 main :: IO ()
 main = do
