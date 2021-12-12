@@ -73,13 +73,21 @@ cache_build() {
     if ! "${BUILDER_ARGS[@]}" "$FILE_NAME"; then
       cd "$OLD_DIR"
       rm -rf "$TARGET_DIR"
+      exit 1
     fi
   fi
 }
 
 # Extension handlers
-hs() { runghc "$@"; }
 py() { python "$@"; }
+
+hs() {
+  FILE_NAME=$1
+  FILE_STEM=${FILE_NAME%.rs}
+
+  cache_build "$FILE_NAME" ghc -O3 -o "$FILE_STEM" 1>/dev/null \
+    && "./$FILE_STEM" "${@:2}"
+}
 
 _scala() {
   FILE_NAME=$1
