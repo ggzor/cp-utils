@@ -99,7 +99,7 @@ rs() {
   FILE_NAME=$1
   FILE_STEM=${FILE_NAME%.rs}
 
-  cache_build "$FILE_NAME" rustc -o "$FILE_STEM" && "./$FILE_STEM" "${@:2}"
+  cache_build "$FILE_NAME" rustc -O -o "$FILE_STEM" && "./$FILE_STEM" "${@:2}"
 }
 
 main "$@"
