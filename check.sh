@@ -69,24 +69,35 @@ check() {
 
   CMD_STATUS=$?
 
-  if (( $CMD_STATUS == 0 )); then
-    if (( $JUST_CHECK == 1 )); then
-      STATUS=CHECK
-    else
-      if diff "$EXPECTED_FILE" "$OUTPUT_FILE" &>/dev/null; then
-        STATUS=SUCCESS
-      else
-        STATUS=WRONG
-      fi
-    fi
-  else
-    STATUS=RUNTIME_ERROR
-  fi
-
   local MULTILINE=0
   if (( $(wc -l "$EXPECTED_FILE" | cut -d' ' -f1) > 1 )) \
     || (( $(wc -l "$OUTPUT_FILE" | cut -d' ' -f1) > 1 )); then
     MULTILINE=1
+  fi
+
+  if (( $CMD_STATUS == 0 )); then
+    if (( $JUST_CHECK == 1 )); then
+      STATUS=CHECK
+    else
+      if (( $MULTILINE == 1 )); then
+        if diff "$EXPECTED_FILE" "$OUTPUT_FILE" &>/dev/null; then
+          STATUS=SUCCESS
+        else
+          STATUS=WRONG
+        fi
+      else
+        local OUTPUT=$(< "$OUTPUT_FILE")
+        local EXPECTED=$(< "$EXPECTED_FILE")
+
+        if [[ "$OUTPUT" == "$EXPECTED" ]]; then
+          STATUS=SUCCESS
+        else
+          STATUS=WRONG
+        fi
+      fi
+    fi
+  else
+    STATUS=RUNTIME_ERROR
   fi
 
   case $STATUS in
