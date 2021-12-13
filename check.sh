@@ -57,16 +57,23 @@ check() {
   set +e
 
   local INPUT="$PROGRAM_DIR/$1"
-  local EXPECTED=$(cat)
-  local OUTPUT
-  OUTPUT=$(cd "$OLD_DIR" && cp-utils/run.sh "$PROGRAM" "${@:2}" < "$INPUT" 2>&1)
+  local TMP=$(mktemp -d)
+  local EXPECTED_FILE="$TMP/expected"
+  local OUTPUT_FILE="$TMP/current"
+
+  cat > "$EXPECTED_FILE"
+  (
+    cd "$OLD_DIR" \
+    && cp-utils/run.sh "$PROGRAM" "${@:2}" < "$INPUT" 2>&1
+  ) > "$OUTPUT_FILE"
+
   CMD_STATUS=$?
 
   if (( $CMD_STATUS == 0 )); then
     if (( $JUST_CHECK == 1 )); then
       STATUS=CHECK
     else
-      if diff <(cat <<< "$EXPECTED") <(cat <<< "$OUTPUT") &>/dev/null; then
+      if diff "$EXPECTED_FILE" "$OUTPUT_FILE" &>/dev/null; then
         STATUS=SUCCESS
       else
         STATUS=WRONG
@@ -77,7 +84,8 @@ check() {
   fi
 
   local MULTILINE=0
-  if [[ $EXPECTED == *$'\n'+(?) ]] || [[ $OUTPUT == *$'\n'+(?) ]]; then
+  if (( $(wc -l "$EXPECTED_FILE" | cut -d' ' -f1) > 1 )) \
+    || (( $(wc -l "$OUTPUT_FILE" | cut -d' ' -f1) > 1 )); then
     MULTILINE=1
   fi
 
@@ -98,6 +106,9 @@ check() {
   printf '\e[2m%s\e[0m' " ${@:2}"
 
   if (( MULTILINE == 0 )) && [[ $STATUS != RUNTIME_ERROR ]]; then
+    local EXPECTED=$(< "$EXPECTED_FILE")
+    local OUTPUT=$(< "$OUTPUT_FILE")
+
     if [[ $EXPECTED =~ [[:space:]] ]] || [[ $OUTPUT =~ [[:space:]] ]]; then
       OUTPUT="'$OUTPUT'"
       EXPECTED="'$EXPECTED'"
@@ -107,27 +118,24 @@ check() {
   case $STATUS in
     SUCCESS)
       if (( $MULTILINE == 1 )); then
-        printf '\n%s\n' "$OUTPUT"
+        printf '\n'
+        cat "$OUTPUT_FILE"
+        printf '\n'
       else
         printf ' -> \e[32m%s\n\e[0m' "$OUTPUT"
       fi
       ;;
     CHECK)
       if (( $MULTILINE == 1 )); then
-        printf '\n%s\n' "$OUTPUT"
+        printf '\n'
+        cat "$OUTPUT_FILE"
+        printf '\n'
       else
         printf ' -> \e[1m%s\n\e[0m' "$OUTPUT"
       fi
       ;;
     WRONG)
       if (( $MULTILINE == 1 )); then
-        local TMP=$(mktemp -d)
-        local EXPECTED_FILE="$TMP/expected"
-        local OUTPUT_FILE="$TMP/current"
-
-        printf '%s' "$EXPECTED" > "$EXPECTED_FILE"
-        printf '%s' "$OUTPUT" > "$OUTPUT_FILE"
-
         if type delta &> /dev/null; then
           diff -u "$OUTPUT_FILE" "$EXPECTED_FILE" \
             | grep -vF '\ No newline at end of file' \
