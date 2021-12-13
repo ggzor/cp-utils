@@ -148,7 +148,9 @@ check() {
       fi
       ;;
     RUNTIME_ERROR)
-      printf '\n%s\n' "$OUTPUT"
+      printf '\n'
+      cat "$OUTPUT_FILE"
+      printf '\n'
       ;;
   esac
 
