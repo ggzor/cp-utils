@@ -41,10 +41,20 @@ _check() {
   JUST_CHECK=0
 }
 
+resolve_path() {
+  TARGET="$1"
+
+  if [[ "$TARGET" == /* ]]; then
+    echo "$TARGET"
+  else
+    echo "$PROGRAM_DIR/$1"
+  fi
+}
+
 # Get some useful params
 MAX_INPUT_LEN=0
 check() {
-  local INPUT="$PROGRAM_DIR/$1"
+  local INPUT=$(resolve_path "$1")
 
   if [[ "$1" == '-s' ]]; then
     INPUT="'$2'"
@@ -58,7 +68,7 @@ check() {
 . "$SPEC_FILE"
 
 check() {
-  local INPUT="$PROGRAM_DIR/$1"
+  local INPUT=$(resolve_path "$1")
 
   local IS_STRING=0
 
