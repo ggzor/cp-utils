@@ -72,7 +72,7 @@ align_first() {
   local FIRST="$2"
 
   printf "\e[2m%-${ALIGN_WIDTH}s\e[0m" "$FIRST"
-  printf '\e[2m%s\e[0m' "${@:3}"
+  printf ' \e[2m%s\e[0m' "${@:3}"
 }
 
 show_partial_output() {
