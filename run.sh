@@ -79,13 +79,32 @@ cache_build() {
 }
 
 # Extension handlers
-py() { python "$@"; }
+py() { python -u "$@"; }
+
+build_hs() {
+  local FILE_STEM="$1"
+  local FILE_NAME="$2"
+
+  ( cat << EOF
+module Runner where
+
+import qualified Main
+import System.IO
+
+main = hSetBuffering stdout LineBuffering >> Main.main
+EOF
+  ) > Runner.hs
+
+  cp "$FILE_NAME" Main.hs
+
+  ghc -main-is Runner.main -O3 -o "$FILE_STEM" Runner.hs Main.hs
+}
 
 hs() {
   FILE_NAME=$1
-  FILE_STEM=${FILE_NAME%.rs}
+  FILE_STEM=${FILE_NAME%.hs}
 
-  cache_build "$FILE_NAME" ghc -O3 -o "$FILE_STEM" 1>/dev/null \
+  cache_build "$FILE_NAME" build_hs "$FILE_STEM" 1>/dev/null \
     && "./$FILE_STEM" "${@:2}"
 }
 

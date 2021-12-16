@@ -71,11 +71,29 @@ align_first() {
   local ALIGN_WIDTH="$1"
   local FIRST="$2"
 
-  printf " \e[2m%-${ALIGN_WIDTH}s\e[0m" "$FIRST"
-  printf '\e[2m%s\e[0m' " ${@:3}"
+  printf "\e[2m%-${ALIGN_WIDTH}s\e[0m" "$FIRST"
+  printf '\e[2m%s\e[0m' "${@:3}"
+}
+
+show_partial_output() {
+  LABEL="$1"
+
+  printf '\e[34m[ RUN ]\e[0m %s\n' "$1"
+
+  LINE_COUNT=1
+  while IFS= read -r LINE; do
+    printf '%s\n' "$LINE"
+
+    (( LINE_COUNT += 1 ))
+  done
+
+  printf '\e[K'
+  printf '\e[%sA' "$LINE_COUNT"
+  printf '\e[J'
 }
 
 check() {
+  set +e
   local INPUT=$(resolve_path "$1")
 
   local IS_STRING=0
@@ -96,12 +114,17 @@ check() {
   local EXPECTED_FILE="$TMP/expected"
   local OUTPUT_FILE="$TMP/current"
 
-  set +e
+  local INPUT_LABEL="$INPUT"
+  if (( $IS_STRING == 1 )); then
+    INPUT_LABEL="'$INPUT_STR'"
+  fi
+  INPUT_LABEL=$(align_first "$MAX_INPUT_LEN" "$INPUT_LABEL" "${@:2}")
+
   cat > "$EXPECTED_FILE"
   (
-    cd "$OLD_DIR" \
-    && cp-utils/run.sh "$PROGRAM" "${@:2}" < "$INPUT" 2>&1
-  ) > "$OUTPUT_FILE"
+  cd "$OLD_DIR" \
+    && stdbuf --output=L cp-utils/run.sh "$PROGRAM" "${@:2}" < "$INPUT" 2>&1
+  ) | tee "$OUTPUT_FILE" | show_partial_output "$INPUT_LABEL"
 
   CMD_STATUS=$?
   set -e
@@ -150,11 +173,7 @@ check() {
     *) EXIT_STATUS=1 ;;
   esac
 
-  local INPUT_LABEL="$INPUT"
-  if (( $IS_STRING == 1 )); then
-    INPUT_LABEL="'$INPUT_STR'"
-  fi
-  align_first "$MAX_INPUT_LEN" "$INPUT_LABEL" "${@:2}"
+  printf ' %s' "$INPUT_LABEL"
 
   if (( MULTILINE == 0 )) && [[ $STATUS != RUNTIME_ERROR ]]; then
     local EXPECTED=$(< "$EXPECTED_FILE")
