@@ -127,7 +127,6 @@ check() {
   ) | tee "$OUTPUT_FILE" | show_partial_output "$INPUT_LABEL"
 
   CMD_STATUS=$?
-  set -e
 
   local MULTILINE=0
   if (( $(wc -l "$EXPECTED_FILE" | cut -d' ' -f1) > 1 )) \
@@ -223,6 +222,7 @@ check() {
       printf '\n'
       ;;
   esac
+  set -e
 }
 
 EXIT_STATUS=0
