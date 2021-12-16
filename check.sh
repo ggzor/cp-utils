@@ -46,6 +46,10 @@ MAX_INPUT_LEN=0
 check() {
   local INPUT="$PROGRAM_DIR/$1"
 
+  if [[ "$1" == '-s' ]]; then
+    INPUT="'$2'"
+  fi
+
   if (( ${#INPUT} > $MAX_INPUT_LEN )); then
     MAX_INPUT_LEN=${#INPUT}
   fi
@@ -55,6 +59,21 @@ check() {
 
 check() {
   local INPUT="$PROGRAM_DIR/$1"
+
+  local IS_STRING=0
+
+  if [[ "$1" == '-s' ]]; then
+    local INPUT_STR="$2"
+
+    local TEMP_FILE=$(mktemp)
+    printf '%s' "$INPUT_STR" > "$TEMP_FILE"
+
+    INPUT="$TEMP_FILE"
+    IS_STRING=1
+
+    shift 1
+  fi
+
   local TMP=$(mktemp -d)
   local EXPECTED_FILE="$TMP/expected"
   local OUTPUT_FILE="$TMP/current"
@@ -113,7 +132,11 @@ check() {
     *) EXIT_STATUS=1 ;;
   esac
 
-  printf " \e[2m%-${MAX_INPUT_LEN}s\e[0m" "$INPUT"
+  if (( $IS_STRING == 1 )); then
+    printf " \e[2m%-${MAX_INPUT_LEN}s\e[0m" "'$INPUT_STR'"
+  else
+    printf " \e[2m%-${MAX_INPUT_LEN}s\e[0m" "$INPUT"
+  fi
   printf '\e[2m%s\e[0m' " ${@:2}"
 
   if (( MULTILINE == 0 )) && [[ $STATUS != RUNTIME_ERROR ]]; then
