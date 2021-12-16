@@ -54,13 +54,12 @@ check() {
 . "$SPEC_FILE"
 
 check() {
-  set +e
-
   local INPUT="$PROGRAM_DIR/$1"
   local TMP=$(mktemp -d)
   local EXPECTED_FILE="$TMP/expected"
   local OUTPUT_FILE="$TMP/current"
 
+  set +e
   cat > "$EXPECTED_FILE"
   (
     cd "$OLD_DIR" \
@@ -68,6 +67,7 @@ check() {
   ) > "$OUTPUT_FILE"
 
   CMD_STATUS=$?
+  set -e
 
   local MULTILINE=0
   if (( $(wc -l "$EXPECTED_FILE" | cut -d' ' -f1) > 1 )) \
@@ -164,8 +164,6 @@ check() {
       printf '\n'
       ;;
   esac
-
-  set -e
 }
 
 EXIT_STATUS=0
