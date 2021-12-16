@@ -67,6 +67,14 @@ check() {
 
 . "$SPEC_FILE"
 
+align_first() {
+  local ALIGN_WIDTH="$1"
+  local FIRST="$2"
+
+  printf " \e[2m%-${ALIGN_WIDTH}s\e[0m" "$FIRST"
+  printf '\e[2m%s\e[0m' " ${@:3}"
+}
+
 check() {
   local INPUT=$(resolve_path "$1")
 
@@ -142,12 +150,11 @@ check() {
     *) EXIT_STATUS=1 ;;
   esac
 
+  local INPUT_LABEL="$INPUT"
   if (( $IS_STRING == 1 )); then
-    printf " \e[2m%-${MAX_INPUT_LEN}s\e[0m" "'$INPUT_STR'"
-  else
-    printf " \e[2m%-${MAX_INPUT_LEN}s\e[0m" "$INPUT"
+    INPUT_LABEL="'$INPUT_STR'"
   fi
-  printf '\e[2m%s\e[0m' " ${@:2}"
+  align_first "$MAX_INPUT_LEN" "$INPUT_LABEL" "${@:2}"
 
   if (( MULTILINE == 0 )) && [[ $STATUS != RUNTIME_ERROR ]]; then
     local EXPECTED=$(< "$EXPECTED_FILE")
