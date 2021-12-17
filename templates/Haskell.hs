@@ -17,11 +17,15 @@ import Data.Maybe
 import Data.Ord
 import qualified Data.Set as S
 import Data.Tuple
+import Numeric
 
 import System.Environment
 import System.IO.Unsafe (unsafePerformIO)
 
 debug a = seq (unsafePerformIO $ print a)
+
+compDebug :: Show a => a -> a
+compDebug = debug <$> id <*> id
 
 solve1 :: [Int] -> Int
 solve1 = L.foldl' (+) 0
